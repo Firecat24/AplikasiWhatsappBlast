@@ -1,0 +1,1 @@
+pyinstaller --onefile --windowed --icon=icon/icon.ico --name "WhatsappBlastDMU" Whatsapp_Blast_DMU.py

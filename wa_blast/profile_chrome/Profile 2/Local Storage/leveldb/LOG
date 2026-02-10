@@ -1,0 +1,8 @@
+2025/08/04-16:27:19.281 1e24 Reusing MANIFEST C:\Users\Microsoft-PC\AppData\Local\Google\Chrome\User Data\Profile 2\Local Storage\leveldb/MANIFEST-000001
+2025/08/04-16:27:19.285 1e24 Recovering log #3
+2025/08/04-16:27:19.287 1e24 Level-0 table #3: started
+2025/08/04-16:27:19.299 1e24 Level-0 table #3: 21205 bytes OK
+2025/08/04-16:27:19.300 1e24 Recovering log #4
+2025/08/04-16:27:19.305 1e24 Reusing old log C:\Users\Microsoft-PC\AppData\Local\Google\Chrome\User Data\Profile 2\Local Storage\leveldb/000004.log 
+2025/08/04-16:27:19.309 1e24 Delete type=0 #3
+2025/08/04-16:27:19.309 1e24 Delete type=2 #5
