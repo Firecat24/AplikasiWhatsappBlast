@@ -20,7 +20,7 @@ class GUI:
     def __init__(self):
         self.root = tk.Tk()
         self.root.title("Whatsapp Blast DMU")
-        self.root.geometry("500x750")
+        self.root.geometry("500x950")
         self.root.resizable(False, False)
         icon_path = os.path.join(os.path.dirname(__file__), 'icon', 'icon.ico')
         if os.path.exists(icon_path):
@@ -35,7 +35,7 @@ class GUI:
 
         # Input teks
         tk.Label(self.root, text="Masukkan text:").pack(pady=5)
-        self.entry_nama = tk.Text(self.root, width=70, height=10)  # Lebar & tinggi diperbesar
+        self.entry_nama = tk.Text(self.root, width=70, height=12)  # Lebar & tinggi diperbesar
         self.entry_nama.pack(pady=5, padx=10)
 
         #frame utama
@@ -86,52 +86,75 @@ class GUI:
         # Tombol Pilih Excel
         self.btn_file_excel = tk.Button(self.frame_kiri, text="Unggah File Excel", command=self.pilih_excel)
         self.btn_file_excel.pack(pady=5)
-
-        # Label untuk path Excel
         self.file_label_excel = tk.Label(self.frame_kiri, text="File Excel: Belum ada", height=2, width=30, anchor="center", wraplength=200)
         self.file_label_excel.pack(pady=3)
 
-        # Waktu Tunggu
-        angka_rentang = [str(i) for i in range(5, 21)] 
-        tk.Label(self.frame_kiri, text="Masukkan waktu tunggu (detik):").pack(pady=5)
-        self.waktu_tunggu = ttk.Combobox(self.frame_kiri, values=angka_rentang, state="readonly")
-        self.waktu_tunggu.pack(pady=3, padx=3)
+        # ======================================================================
+        # [MODIFIKASI] AREA PENGATURAN WAKTU (KIRI & KANAN)
+        # ======================================================================
+        # Kita buat Frame container agar pengaturan waktu rapi bersebelahan
+
+        self.frame_waktu_container = tk.Frame(self.frame_kiri, borderwidth=1, relief="groove")
+        self.frame_waktu_container.pack(pady=10, padx=5, ipadx=5, ipady=5)
+
+        tk.Label(self.frame_waktu_container, text="--- PENGATURAN WAKTU ---", font=("Arial", 8, "bold")).pack(side="top", pady=2)
+
+        # --- SUB-FRAME UNTUK BATCH (KIRI) ---
+        self.frame_batch_setting = tk.Frame(self.frame_waktu_container)
+        self.frame_batch_setting.pack(side="left", padx=10)
+
+        # Dropdown Jumlah Batch
+        tk.Label(self.frame_batch_setting, text="Istirahat Tiap (Pesan):").pack(anchor="w")
+        batch_opts = ["0", "5", "10", "20", "50", "100"] # 0 artinya matikan fitur
+        self.jumlah_batch = ttk.Combobox(self.frame_batch_setting, values=batch_opts, state="readonly", width=12)
+        self.jumlah_batch.pack(pady=2)
+        self.jumlah_batch.current(0) # Default 0 (Mati)
+        
+        # Dropdown Durasi Batch
+        tk.Label(self.frame_batch_setting, text="Durasi Istirahat (Detik):").pack(anchor="w")
+        durasi_opts = ["5", "10", "15", "20"]
+        self.waktu_batch = ttk.Combobox(self.frame_batch_setting, values=durasi_opts, state="readonly", width=12)
+        self.waktu_batch.pack(pady=2)
+        self.waktu_batch.current(2)
+
+        # --- SUB-FRAME UNTUK STANDAR (KANAN) ---
+        self.frame_std_setting = tk.Frame(self.frame_waktu_container)
+        self.frame_std_setting.pack(side="left", padx=10)
+
+        # Dropdown Waktu Tunggu (Jeda antar chat)
+        angka_rentang = [str(i) for i in range(5, 21)]
+        tk.Label(self.frame_std_setting, text="Jeda Antar Chat (Detik):").pack(anchor="w")
+        self.waktu_tunggu = ttk.Combobox(self.frame_std_setting, values=angka_rentang, state="readonly", width=12)
+        self.waktu_tunggu.pack(pady=2)
         self.waktu_tunggu.current(5)
 
-        # Waktu Tunggu
-        angka_rentang_interval = [str(i) for i in range(1, 4)] 
-        tk.Label(self.frame_kiri, text="Interval tiap langkah (detik):").pack(pady=5)
-        self.waktu_tunggu_interval = ttk.Combobox(self.frame_kiri, values=angka_rentang_interval, state="readonly")
-        self.waktu_tunggu_interval.pack(pady=3, padx=3)
+        # Dropdown Interval Ketik
+        angka_rentang_interval = [str(i) for i in range(1, 4)]
+        tk.Label(self.frame_std_setting, text="Interval Program (Detik):").pack(anchor="w")
+        self.waktu_tunggu_interval = ttk.Combobox(self.frame_std_setting, values=angka_rentang_interval, state="readonly", width=12)
+        self.waktu_tunggu_interval.pack(pady=2)
         self.waktu_tunggu_interval.current(2)
 
-        # Frame Tombol
+        # ======================================================================
+
+        # Frame Tombol Eksekusi
         self.frame_button = tk.Frame(self.frame_kiri)
-        self.frame_button.pack(pady=5)
-
-        # Tombol Submit & Stop Program
-        self.btn_submit = tk.Button(self.frame_button, text="Kirim", command=self.submit)
+        self.frame_button.pack(pady=10)
+        self.btn_submit = tk.Button(self.frame_button, text="MULAI KIRIM 🚀", bg="#4CAF50", fg="white", font=("Arial", 10, "bold"), command=self.submit)
         self.btn_submit.pack(side="left", padx=5)
-
-        # Tombol Stop Program
-        self.btn_stop = tk.Button(self.frame_button, text="Stop Program", command=self.stop_program)
+        self.btn_stop = tk.Button(self.frame_button, text="KELUAR", bg="#f44336", fg="white", font=("Arial", 10, "bold"), command=self.stop_program)
         self.btn_stop.pack(side="left", padx=5)
 
-        # Label hasil
-        self.output_label = tk.Label(self.root, text="Output", font=("Arial", 10, "bold"))
+        # Output Text
+        self.output_label = tk.Label(self.root, text="Log Aktivitas:", font=("Arial", 10, "bold"))
         self.output_label.pack(pady=1)
-
-        # Area Text untuk output
-        self.text_output = tk.Text(self.root, height=10, width=70)
-        self.text_output.pack(pady=10, padx=10)
-
-        # Label hasil
+        self.text_output = tk.Text(self.root, height=15, width=70)
+        self.text_output.pack(pady=5, padx=10)
         self.hasil_label = tk.Label(self.root, text="", font=("Arial", 10, "bold"))
         self.hasil_label.pack(pady=1)
 
-        # Redirect print ke text_output
+        # Redirect print
         sys.stdout = RedirectText(self.text_output)
-
 
     def hapus_gambar(self):
         self.path_gambar = ""
@@ -197,16 +220,31 @@ class GUI:
 
     def run_blast(self, pesan, opsi):
         try:
+            # Ambil nilai dari GUI
             waktu_tunggu = self.waktu_tunggu.get()
             waktu_tunggu_interval = self.waktu_tunggu_interval.get()
-            logic.blast_whatsapp(self.path_excel, opsi, self.path_gambar, pesan, waktu_tunggu, waktu_tunggu_interval)
+            
+            # AMBIL NILAI BATCH BARU
+            jumlah_batch = self.jumlah_batch.get()
+            waktu_batch = self.waktu_batch.get()
 
-            # Update hasil di GUI setelah blast selesai
+            # Panggil logic dengan parameter tambahan
+            logic.blast_whatsapp(
+                self.path_excel, 
+                opsi, 
+                self.path_gambar, 
+                pesan, 
+                waktu_tunggu, 
+                waktu_tunggu_interval,
+                jumlah_batch,
+                waktu_batch
+)
+
             if self.root.winfo_exists():
-                self.root.after(0, lambda: self.hasil_label.config(text="Berhasil menggunakan blast"))
+                self.root.after(0, lambda: self.hasil_label.config(text="Selesai!"))
 
         except Exception as e:
-            print(f"[ERROR run_blast] {e}")
+            print(f"[ERROR] {e}")
 
     def stop_program(self):
         self.root.destroy()  # Menutup aplikasi

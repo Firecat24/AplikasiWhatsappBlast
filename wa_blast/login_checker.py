@@ -8,38 +8,6 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException
 import os, time
 
-# def cek_status_login(profile_path, timeout=15):
-#     options = Options()
-#     options.add_argument(f"--user-data-dir={os.path.abspath(profile_path)}")
-#     options.add_argument("--window-size=1280,800")
-#     options.add_argument("--disable-gpu")
-#     options.add_argument("--no-sandbox")
-#     options.add_argument("--headless=new")
-#     options.add_experimental_option("excludeSwitches", ["enable-logging"])
-
-#     try:
-#         driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
-#         driver.get("https://web.whatsapp.com")
-#         wait = WebDriverWait(driver, timeout)
-
-#         try:
-#             wait.until(EC.presence_of_element_located(
-#                 (By.XPATH, "//div[@contenteditable='true' and @role='textbox']")))
-#             print("[DEBUG] Search bar ditemukan → Sudah login")
-#             return "✅ Sudah Login"
-#         except TimeoutException:
-#             print("[DEBUG] Search bar tidak ditemukan → Belum login")
-#             return "❌ Belum Login"
-
-#     except Exception as e:
-#         print(f"[ERROR] Gagal buka Chrome: {e}")
-#         return "⚠️ Tidak Diketahui (Gagal load WA)"
-#     finally:
-#         try:
-#             driver.quit()
-#         except:
-#             pass
-
 def cek_status_login(profile_path, timeout=10):
     def buat_driver(headless=True):
         opts = Options()

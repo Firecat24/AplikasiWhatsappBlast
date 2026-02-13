@@ -22,11 +22,13 @@ def copy_image_to_clipboard(image_path):
         print(f"[ERROR CLIPBOARD] Gagal copy gambar: {e}")
         return False
     
-def blast_whatsapp(file_path, profile_browser, gambar_path, pesan, waktu_tunggu, interval):
+def blast_whatsapp(file_path, profile_browser, gambar_path, pesan, waktu_tunggu, interval, jumlah_batch, waktu_batch):
     driver = None
     df = pd.read_excel(file_path, dtype={"Nomor": str})
     waktu_tunggu = int(waktu_tunggu)
     interval = int(interval)
+    jumlah_batch = int(jumlah_batch)
+    waktu_batch = int(waktu_batch)
 
     # --- TAMBAHAN: Matikan Chrome yang nyangkut agar profil bisa dimuat ---
     print("[INFO] Membersihkan sisa proses Chrome...")
@@ -73,7 +75,21 @@ def blast_whatsapp(file_path, profile_browser, gambar_path, pesan, waktu_tunggu,
                 df["Status"] = ""
 
             df["Status"] = df["Status"].astype(str)
-
+                
+            if jumlah_batch > 0:
+                nomor_sekarang = index + 1
+                
+                # Cek apakah saatnya istirahat?
+                if nomor_sekarang % jumlah_batch == 0 and nomor_sekarang < len(df):
+                    print(f"\n[PAUSE] Sudah memproses {nomor_sekarang} nomor.")
+                    print(f"[PAUSE] Pendinginan mesin selama {waktu_batch} detik")
+                    
+                    # Hitung mundur
+                    for i in range(waktu_batch, 0, -1):
+                        print(f"-> Lanjut dalam {i} detik", end="\r")
+                        time.sleep(1)
+                    
+                    print(f"   -> Gas lagi! 🚀\n")
             try:
                 print(f"[INFO] Mengirim pesan ke {nomor_nama} ({nomor_hp})...")
                 search_box = WebDriverWait(driver, 120).until(EC.presence_of_element_located((By.XPATH, "//div[@contenteditable='true' and @role='textbox']")))
@@ -103,7 +119,7 @@ def blast_whatsapp(file_path, profile_browser, gambar_path, pesan, waktu_tunggu,
                     action = ActionChains(driver)
                     action.send_keys(Keys.ESCAPE).perform()
                     df.at[index, "Status"] = "ada History Chatnya✅"
-                    print(f"Berhasil mengirim ke {nomor_nama}")
+                    print(f"[SUKSES] Berhasil mengirim ke {nomor_nama}")
                     df.to_excel(file_path, index=False)
                     time.sleep(waktu_tunggu)
                 else:
@@ -151,7 +167,7 @@ def blast_whatsapp(file_path, profile_browser, gambar_path, pesan, waktu_tunggu,
 
                         time.sleep(interval)
                         ActionChains(driver).send_keys(Keys.ESCAPE).perform()
-                        print(f"Berhasil mengirim ke {nomor_nama}")
+                        print(f"[SUKSES] Berhasil mengirim ke {nomor_nama}")
                         df.to_excel(file_path, index=False)
                         time.sleep(waktu_tunggu)
             except NoSuchElementException as e:
@@ -193,7 +209,7 @@ def blast_whatsapp(file_path, profile_browser, gambar_path, pesan, waktu_tunggu,
                         action.send_keys(Keys.ESCAPE).perform()
                         df.at[index, "Status"] = "Nomor Belum Pernah di Chat ➖"
                         df.to_excel(file_path, index=False)
-                        print(f"Berhasil mengirim ke {nomor_nama}")
+                        print(f"[SUKSES] Berhasil mengirim ke {nomor_nama}")
                         time.sleep(waktu_tunggu)
                     else:
                         full_path = os.path.abspath(gambar_path)
@@ -239,7 +255,7 @@ def blast_whatsapp(file_path, profile_browser, gambar_path, pesan, waktu_tunggu,
                             
                             time.sleep(interval)
                             ActionChains(driver).send_keys(Keys.ESCAPE).perform()
-                            print(f"Berhasil mengirim ke {nomor_nama}")
+                            print(f"[SUKSES] Berhasil mengirim ke {nomor_nama}")
                             df.to_excel(file_path, index=False)
                             time.sleep(waktu_tunggu)
                 except NoSuchElementException as e:
