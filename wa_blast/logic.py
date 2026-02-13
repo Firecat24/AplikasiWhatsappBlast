@@ -29,9 +29,6 @@ def blast_whatsapp(file_path, profile_browser, gambar_path, pesan, waktu_tunggu,
     interval = int(interval)
     jumlah_batch = int(jumlah_batch)
     waktu_batch = int(waktu_batch)
-
-    # --- TAMBAHAN: Matikan Chrome yang nyangkut agar profil bisa dimuat ---
-    print("[INFO] Membersihkan sisa proses Chrome...")
     os.system("taskkill /im chrome.exe /f >nul 2>&1") 
     time.sleep(1) 
     # ---------------------------------------------------------------------
@@ -48,16 +45,14 @@ def blast_whatsapp(file_path, profile_browser, gambar_path, pesan, waktu_tunggu,
         # ✅ Set path ke folder profil
         abs_profile_path = os.path.abspath(profile_browser)
         options.add_argument(f"--user-data-dir={abs_profile_path}")
-        print(f"[INFO] Menggunakan profil Chrome: {abs_profile_path}")
+        print(f"[INFO] Menggunakan profil Chrome: {profile_browser}")
 
         # 🚀 PERBAIKAN UTAMA: Jalankan driver dengan pembaruan otomatis yang valid
-        print("[INFO] Mendownload/Mengecek ChromeDriver sesuai versi Chrome...")
+        # print("[INFO] Mendownload/Mengecek ChromeDriver sesuai versi Chrome...")
         service = Service(ChromeDriverManager().install())
         driver = webdriver.Chrome(service=service, options=options)
         
         driver.get("https://web.whatsapp.com")
-        print("[INFO] Tunggu hingga WhatsApp Web siap...")
-
         for index, row in df.iterrows():
             nomor_hp = row["Nomor"].strip().replace("'", "").replace(" ", "")
             nomor_nama = row["Nama"].strip()
@@ -81,17 +76,17 @@ def blast_whatsapp(file_path, profile_browser, gambar_path, pesan, waktu_tunggu,
                 
                 # Cek apakah saatnya istirahat?
                 if nomor_sekarang % jumlah_batch == 0 and nomor_sekarang < len(df):
-                    print(f"\n[PAUSE] Sudah memproses {nomor_sekarang} nomor.")
+                    print(f"[PAUSE] Sudah memproses {nomor_sekarang} nomor.")
                     print(f"[PAUSE] Pendinginan mesin selama {waktu_batch} detik")
                     
                     # Hitung mundur
                     for i in range(waktu_batch, 0, -1):
-                        print(f"-> Lanjut dalam {i} detik", end="\r")
+                        print(f" {i}", end=" ", flush=True)
                         time.sleep(1)
-                    
-                    print(f"   -> Gas lagi! 🚀\n")
+                    print("\n")
+
             try:
-                print(f"[INFO] Mengirim pesan ke {nomor_nama} ({nomor_hp})...")
+                # print(f"[INFO] Mengirim pesan ke {nomor_nama} ({nomor_hp})...")
                 search_box = WebDriverWait(driver, 120).until(EC.presence_of_element_located((By.XPATH, "//div[@contenteditable='true' and @role='textbox']")))
                 search_box.click()
                 time.sleep(interval)
@@ -174,7 +169,7 @@ def blast_whatsapp(file_path, profile_browser, gambar_path, pesan, waktu_tunggu,
                 print(f"element tidak ditemukan {e}")
 
             except TimeoutException:
-                print(f"Nomor dari {nomor_nama} Tidak Ditemukan di daftar kontak")
+                # print(f"[INFO] Nomor dari {nomor_nama} Tidak Ditemukan di daftar kontak")
                 search_box.send_keys(Keys.CONTROL + "a")
                 search_box.send_keys(Keys.BACKSPACE)
                 time.sleep(interval)
@@ -262,7 +257,7 @@ def blast_whatsapp(file_path, profile_browser, gambar_path, pesan, waktu_tunggu,
                     print(f"suatu element tidak ditemukan {e}")
 
                 except TimeoutException:
-                    print(f'Nomor {nomor_nama} Tidak Terdaftar di Whatsapp')
+                    print(f'[INFO] Nomor {nomor_nama} Tidak Terdaftar di Whatsapp')
                     df.at[index, "Status"] = "Nomor Tidak Ditemukan ❌"
                     df.to_excel(file_path, index=False)
                     # Tekan ESC sekali untuk menutup popup "Nomor tidak ditemukan" (jika ada)
@@ -289,7 +284,7 @@ def blast_whatsapp(file_path, profile_browser, gambar_path, pesan, waktu_tunggu,
             except Exception as e:
                 print(f"error lainnya : {e}")
 
-        print("Telah mengirim seluruh pesan ke pelanggan")
+        print("[SUKSES] Telah mengirim seluruh pesan ke pelanggan")
         time.sleep(3)
 
     except WebDriverException as we:

@@ -10,8 +10,18 @@ class RedirectText:
         self.text_widget = text_widget
 
     def write(self, string):
-        self.text_widget.insert(tk.END, string)  # Tampilkan teks di GUI
-        self.text_widget.see(tk.END)  # Auto-scroll ke bawah
+        # CEK PENTING: Apakah widget teks masih ada/hidup?
+        try:
+            if self.text_widget.winfo_exists():
+                self.text_widget.insert(tk.END, string)  # Tampilkan teks
+                self.text_widget.see(tk.END)  # Auto-scroll
+            else:
+                # Jika GUI sudah mati, alihkan print ke terminal biasa (console)
+                # biar error gak numpuk
+                sys.__stdout__.write(string)
+        except Exception:
+            # Kalau ada error aneh lainnya, buang saja ke terminal asli
+            sys.__stdout__.write(string)
 
     def flush(self):
         pass
@@ -142,7 +152,7 @@ class GUI:
         self.frame_button.pack(pady=10)
         self.btn_submit = tk.Button(self.frame_button, text="MULAI KIRIM 🚀", bg="#4CAF50", fg="white", font=("Arial", 10, "bold"), command=self.submit)
         self.btn_submit.pack(side="left", padx=5)
-        self.btn_stop = tk.Button(self.frame_button, text="KELUAR", bg="#f44336", fg="white", font=("Arial", 10, "bold"), command=self.stop_program)
+        self.btn_stop = tk.Button(self.frame_button, text="KELUAR", bg="#f44336", fg="white", font=("Arial", 10, "bold"), command=self.on_closing)
         self.btn_stop.pack(side="left", padx=5)
 
         # Output Text
@@ -155,7 +165,14 @@ class GUI:
 
         # Redirect print
         sys.stdout = RedirectText(self.text_output)
+        self.root.protocol("WM_DELETE_WINDOW", self.on_closing)
 
+    def on_closing(self):
+        if tk.messagebox.askokcancel("Keluar", "Yakin ingin menutup aplikasi?"):
+            print("Mematikan paksa semua proses...")
+            self.root.destroy()
+            os._exit(0)
+            
     def hapus_gambar(self):
         self.path_gambar = ""
         self.label_gambar.config(image="")
@@ -238,16 +255,13 @@ class GUI:
                 waktu_tunggu_interval,
                 jumlah_batch,
                 waktu_batch
-)
+            )
 
             if self.root.winfo_exists():
                 self.root.after(0, lambda: self.hasil_label.config(text="Selesai!"))
 
         except Exception as e:
             print(f"[ERROR] {e}")
-
-    def stop_program(self):
-        self.root.destroy()  # Menutup aplikasi
 
     def run(self):
         self.root.mainloop()  # Menjalankan loop utama Tkinter
