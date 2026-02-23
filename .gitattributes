@@ -1,7 +1,7 @@
-# Paksa GitHub menganggap HTML dan TeX sebagai aset (bukan kode)
-*.html linguist-detectable=false
-*.tex linguist-detectable=false
-*.css linguist-detectable=false
+# Mengategorikan TeX dan HTML sebagai dokumentasi agar tidak masuk statistik kode
+*.tex linguist-documentation
+*.html linguist-documentation
+*.css linguist-documentation
 
-# Pastikan Python tetap menjadi bahasa utama yang dideteksi
+# Pastikan Python terdeteksi sebagai bahasa utama
 *.py linguist-detectable=true
