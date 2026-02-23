@@ -1,7 +1,9 @@
-# Mengategorikan TeX dan HTML sebagai dokumentasi agar tidak masuk statistik kode
-*.tex linguist-documentation
+# Paksa semua file non-Python menjadi dokumentasi/aset
 *.html linguist-documentation
+*.tex linguist-documentation
 *.css linguist-documentation
+*.js linguist-documentation
+*.kv linguist-documentation
 
-# Pastikan Python terdeteksi sebagai bahasa utama
+# Pastikan hanya Python yang dihitung dalam statistik kode
 *.py linguist-detectable=true
