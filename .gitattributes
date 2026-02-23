@@ -1,4 +1,7 @@
-# Mengabaikan file template web dari statistik
-*.html linguist-vendored
-*.css linguist-vendored
-*.js linguist-vendored
+# Paksa GitHub menganggap HTML dan TeX sebagai aset (bukan kode)
+*.html linguist-detectable=false
+*.tex linguist-detectable=false
+*.css linguist-detectable=false
+
+# Pastikan Python tetap menjadi bahasa utama yang dideteksi
+*.py linguist-detectable=true
