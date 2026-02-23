@@ -1,0 +1,5 @@
+# Mengabaikan file frontend dari perhitungan statistik GitHub
+*.html linguist-generated=true
+*.css linguist-generated=true
+*.js linguist-generated=true
+*.tex linguist-generated=true
