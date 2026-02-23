@@ -1,0 +1,4 @@
+# Mengabaikan file template web dari statistik
+*.html linguist-vendored
+*.css linguist-vendored
+*.js linguist-vendored
