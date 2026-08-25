@@ -1,0 +1,8 @@
+# Hilangkan TeX dan HTML dari perhitungan statistik
+*.tex linguist-vendored
+*.tex linguist-detectable=false
+*.html linguist-vendored
+*.html linguist-detectable=false
+
+# Definisikan Kivy sebagai bahasa pembantu namun biarkan Python mendominasi
+*.py linguist-detectable=true
