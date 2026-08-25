@@ -1,6 +1,6 @@
 import tkinter as tk
 import logic, sys, threading, os, chrome_profile, time
-from tkinter import filedialog, ttk
+from tkinter import filedialog, ttk, messagebox
 from PIL import Image, ImageTk
 from login_checker import cek_status_login
 from chrome_profile import get_chrome_profiles
@@ -60,9 +60,9 @@ class GUI:
         self.frame_kanan = tk.Frame(self.frame_utama)
         self.frame_kanan.pack(side="right",pady=5, padx=5)
 
-        # Dropdown (Opsi Pilihan)
         self.profiles_dict = chrome_profile.get_chrome_profiles()
-        self.profile_names = list(self.profiles_dict.keys())
+        self.PLACEHOLDER_PROFIL = "-- Pilih Profil --"
+        self.profile_names = [self.PLACEHOLDER_PROFIL] + list(self.profiles_dict.keys())
 
         tk.Label(self.frame_kiri, text="Pilih Opsi:").pack(pady=5)
         self.combo_box = ttk.Combobox(self.frame_kiri, values=self.profile_names, state="readonly")
@@ -118,7 +118,7 @@ class GUI:
         batch_opts = ["0", "5", "10", "20", "50", "100"] # 0 artinya matikan fitur
         self.jumlah_batch = ttk.Combobox(self.frame_batch_setting, values=batch_opts, state="readonly", width=12)
         self.jumlah_batch.pack(pady=2)
-        self.jumlah_batch.current(0) # Default 0 (Mati)
+        self.jumlah_batch.current(1) # Default 0 (Mati)
         
         # Dropdown Durasi Batch
         tk.Label(self.frame_batch_setting, text="Durasi Istirahat (Detik):").pack(anchor="w")
@@ -132,18 +132,11 @@ class GUI:
         self.frame_std_setting.pack(side="left", padx=10)
 
         # Dropdown Waktu Tunggu (Jeda antar chat)
-        angka_rentang = [str(i) for i in range(5, 21)]
+        angka_rentang = [str(i) for i in range(5, 41)]  # sekarang bisa pilih sampai 40 detik
         tk.Label(self.frame_std_setting, text="Jeda Antar Chat (Detik):").pack(anchor="w")
         self.waktu_tunggu = ttk.Combobox(self.frame_std_setting, values=angka_rentang, state="readonly", width=12)
         self.waktu_tunggu.pack(pady=2)
-        self.waktu_tunggu.current(5)
-
-        # Dropdown Interval Ketik
-        angka_rentang_interval = [str(i) for i in range(1, 4)]
-        tk.Label(self.frame_std_setting, text="Interval Program (Detik):").pack(anchor="w")
-        self.waktu_tunggu_interval = ttk.Combobox(self.frame_std_setting, values=angka_rentang_interval, state="readonly", width=12)
-        self.waktu_tunggu_interval.pack(pady=2)
-        self.waktu_tunggu_interval.current(2)
+        self.waktu_tunggu.set("15")
 
         # ======================================================================
 
@@ -214,45 +207,63 @@ class GUI:
 
     def cek_status_thread(self):
         profile_name = self.combo_box.get()
+
+        if profile_name == self.PLACEHOLDER_PROFIL:
+            return  # belum pilih profil beneran, tidak usah cek apa-apa
+
         profile_folder = self.profiles.get(profile_name)
         print(f"[DEBUG] Memeriksa status login untuk profil: {profile_name}")
-        print(f"[DEBUG] Menunggu selama 15 detik...")
         if profile_folder:
-            status = cek_status_login(profile_folder)
-            self.status_label.config(text=f"Status: {status}", fg="green" if "Sudah" in status else "red")
+            status = cek_status_login(
+                profile_folder,
+                confirm_login_callback=self.minta_konfirmasi_login
+            )
+            self.status_label.config(
+                text=f"Status: {status}",
+                fg="green" if "Sudah" in status else "red"
+            )
+            if "Belum Login" in status:
+                # User menolak login tadi -> kembalikan dropdown ke kosongan
+                self.root.after(0, self.reset_ke_placeholder)
+                self.root.after(0, lambda: messagebox.showinfo(
+                    "Belum Login",
+                    "Profil ini belum login. Silakan pilih profil WhatsApp lainnya."
+                ))
         else:
             self.status_label.config(text="Profil tidak ditemukan", fg="orange")
+
+    def reset_ke_placeholder(self):
+        self.combo_box.set(self.PLACEHOLDER_PROFIL)
+        self.status_label.config(text="Status: -", fg="blue")
 
     def cek_status(self, event=None):
         threading.Thread(target=self.cek_status_thread).start()
 
     def submit(self):
-        pesan = self.entry_nama.get("1.0", "end-1c")  # Ambil teks dari input
         profile_display_name = self.combo_box.get()
+
+        if profile_display_name == self.PLACEHOLDER_PROFIL:
+            messagebox.showwarning("Profil Belum Dipilih", "Silakan pilih profil WhatsApp terlebih dahulu.")
+            return
+
+        pesan = self.entry_nama.get("1.0", "end-1c")
         opsi = self.profiles_dict[profile_display_name]
 
-        # Buat thread baru untuk menjalankan blast_whatsapp
         thread = threading.Thread(target=self.run_blast, args=(pesan, opsi))
         thread.start()
 
     def run_blast(self, pesan, opsi):
         try:
-            # Ambil nilai dari GUI
             waktu_tunggu = self.waktu_tunggu.get()
-            waktu_tunggu_interval = self.waktu_tunggu_interval.get()
-            
-            # AMBIL NILAI BATCH BARU
             jumlah_batch = self.jumlah_batch.get()
             waktu_batch = self.waktu_batch.get()
 
-            # Panggil logic dengan parameter tambahan
             logic.blast_whatsapp(
-                self.path_excel, 
-                opsi, 
-                self.path_gambar, 
-                pesan, 
-                waktu_tunggu, 
-                waktu_tunggu_interval,
+                self.path_excel,
+                opsi,
+                self.path_gambar,
+                pesan,
+                waktu_tunggu,
                 jumlah_batch,
                 waktu_batch
             )
@@ -262,6 +273,22 @@ class GUI:
 
         except Exception as e:
             print(f"[ERROR] {e}")
+
+    def minta_konfirmasi_login(self):
+        hasil = {}
+        event = threading.Event()
+
+        def tampilkan_dialog():
+            jawaban = messagebox.askyesno(
+                "Konfirmasi Login",
+                "Akun WhatsApp untuk profil ini belum login.\n\nApakah Anda ingin login sekarang?"
+            )
+            hasil["jawaban"] = jawaban
+            event.set()
+
+        self.root.after(0, tampilkan_dialog)
+        event.wait()
+        return hasil["jawaban"]
 
     def run(self):
         self.root.mainloop()  # Menjalankan loop utama Tkinter

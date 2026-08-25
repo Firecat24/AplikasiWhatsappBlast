@@ -8,7 +8,15 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException
 import os, time
 
-def cek_status_login(profile_path, timeout=10):
+XPATH_LOGGED_IN = "//input[@data-tab='3'] | //div[@id='pane-side']"
+
+
+def cek_status_login(profile_path, timeout=10, confirm_login_callback=None):
+    """
+    confirm_login_callback: fungsi tanpa argumen yang mengembalikan True/False.
+    Dipanggil kalau akun belum login, untuk menanyakan ke user apakah mau
+    login sekarang. Kalau None (dipanggil tanpa GUI), dianggap selalu "ya".
+    """
     def buat_driver(headless=True):
         opts = Options()
         opts.add_argument(f"--user-data-dir={os.path.abspath(profile_path)}")
@@ -28,25 +36,32 @@ def cek_status_login(profile_path, timeout=10):
         wait = WebDriverWait(driver, timeout)
 
         try:
-            wait.until(EC.presence_of_element_located(
-                (By.XPATH, "//div[@contenteditable='true' and @role='textbox']")))
-            print("[DEBUG] Search bar ditemukan → Sudah login")
+            wait.until(EC.presence_of_element_located((By.XPATH, XPATH_LOGGED_IN)))
+            print("[DEBUG] Penanda login ditemukan → Sudah login")
             return "✅ Sudah Login"
 
         except TimeoutException:
-            print("[DEBUG] Search bar tidak ditemukan → Belum login")
-
-            # Tutup browser headless
+            print("[DEBUG] Penanda login tidak ditemukan → Belum login")
             driver.quit()
+            driver = None
 
-            # Buka ulang browser dalam mode tampilan penuh
+            # ============================================================
+            # KONFIRMASI KE USER: mau login sekarang atau tidak?
+            # ============================================================
+            mau_login = True
+            if confirm_login_callback is not None:
+                mau_login = confirm_login_callback()
+
+            if not mau_login:
+                print("[INFO] User memilih untuk tidak login sekarang.")
+                return "❌ Belum Login (silakan pilih profil lain)"
+
             driver = buat_driver(headless=False)
             driver.get("https://web.whatsapp.com")
             print("[INFO] Silakan login WhatsApp di browser yang muncul...")
-            
-            # Tunggu user login (sampai search bar muncul)
+
             WebDriverWait(driver, 600).until(
-                EC.presence_of_element_located((By.XPATH, "//div[@contenteditable='true' and @role='textbox']"))
+                EC.presence_of_element_located((By.XPATH, XPATH_LOGGED_IN))
             )
             print("[INFO] Login berhasil, browser akan ditutup.")
             return "✅ Sudah Login"
@@ -54,9 +69,10 @@ def cek_status_login(profile_path, timeout=10):
     except Exception as e:
         print(f"[ERROR] Gagal buka Chrome: {e}")
         return "⚠️ Tidak Diketahui (Gagal load WA)"
-    
+
     finally:
         try:
-            driver.quit()
+            if driver is not None:
+                driver.quit()
         except:
             pass
